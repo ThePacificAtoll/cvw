@@ -265,19 +265,94 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
              .PAdr(PCPF),
              .CacheCommitted(CacheCommittedF), .InvalidateCache(InvalidateICacheM), .CMOpM('0)); 
 
-      ahbcacheinterface #(P, BEATSPERLINE, AHBWLOGBWPL, LINELEN, LLENPOVERAHBW, 1) 
+      ahbcacheinterface #(P, BEATSPERLINE, AHBWLOGBWPL, LINELEN , LLENPOVERAHBW, 1) 
       ahbcacheinterface(.HCLK(clk), .HRESETn(~reset),
             .HRDATA,
             .Flush(FlushD), .CacheBusRW, .BusCMOZero(1'b0), .HSIZE(IFUHSIZE), .HBURST(IFUHBURST), .HTRANS(IFUHTRANS), .HWSTRB(),
             .Funct3(3'b010), .HADDR(IFUHADDR), .HREADY(IFUHREADY), .HWRITE(IFUHWRITE), .CacheBusAdr(ICacheBusAdr),
             .BeatCount(), .Cacheable(CacheableF), .SelBusBeat(), .WriteDataM('0), .BusAtomic('0),
             .CacheBusAck(ICacheBusAck), .HWDATA(), .CacheableOrFlushCacheM(1'b0), .CacheReadDataWordM('0),
-            .FetchBuffer, .PAdr(PCPF),
+            .FetchBuffer(FetchBuffer), .PAdr(PCPF),
             .BusRW, .Stall(GatedStallD),
             .BusStall, .BusCommitted(BusCommittedF));
 
-      mux3 #(32) UnCachedDataMux(.d0(ICacheInstrF), .d1(ShiftUncachedInstr), .d2(IROMInstrF),
-                                 .s({SelIROM, ~CacheableF}), .y(InstrRawF[31:0]));
+       mux3 #(32) UnCachedDataMux(.d0(ICacheInstrF), .d1(ShiftUncachedInstr), .d2(IROMInstrF),
+                                  .s({SelIROM, ~CacheableF}), .y(InstrRawF[31:0]));
+
+
+      if (P.LOG_HINTS) begin
+        // Detect 16-bit HINT (C.LI x0, imm) *before* decompression
+        // This is encoded as C.ADDI with rd=x0, rs1=x0, imm!=0
+        
+        // --- Use F-stage signal InstrRawF ---
+        wire [1:0]   op_c     = InstrRawF[1:0];   
+        wire [2:0]   funct3_c = InstrRawF[15:13];
+        wire [4:0]   rd_c     = InstrRawF[11:7];  
+        wire [5:0]   imm_c    = {InstrRawF[12], InstrRawF[6:2]};
+
+        wire is_16bit_hint = (op_c == 2'b01) && 
+                            (funct3_c == 3'b010) && 
+                            (rd_c == 5'b00000) && 
+                            (imm_c != 6'b0);
+
+          always @(posedge clk) begin
+      integer i;
+      integer current_bit_idx;
+      integer fetch_bit_offset;
+
+      if (~IFUStallF && ~reset && is_16bit_hint) begin
+        // -------------------------------------------------------
+        // 1. Compute the correct offset of PC inside FetchBuffer
+        // -------------------------------------------------------
+        localparam int LINEBYTES = P.ICACHE_LINELENINBITS / 8;
+        localparam int OFFSETLEN = $clog2(LINEBYTES);
+
+        // Byte offset within current cache line (from icache signals)
+        logic [OFFSETLEN-1:0] fetch_byte_offset;
+        assign fetch_byte_offset = PCPF[OFFSETLEN-1:0];
+
+        // Convert to bit offset
+        fetch_bit_offset = fetch_byte_offset * 8;
+
+        // Start logging *after* the 16-bit hint
+        current_bit_idx = fetch_bit_offset + 16;
+
+        $info("IFU: [PC=0x%h] *** 16-bit HINT DETECTED (C.LI) ***. VLIW count: %0d.", PCF, imm_c);
+        $info("IFU: FETCH_BUFFER=0x%h (bit_offset=%0d)", FetchBuffer, fetch_bit_offset);
+
+        // -------------------------------------------------------
+        // 2. Decode following instructions starting mid-buffer
+        // -------------------------------------------------------
+        for (i = 0; i < imm_c; i = i + 1) begin : VLIW_SCAN
+
+          logic [15:0] instr_16bit;
+          logic [31:0] next_instr;
+          logic is_32bit;
+
+          // Stop if fewer than 32 bits remain
+          if (current_bit_idx + 32 > P.ICACHE_LINELENINBITS) begin
+            $info("IFU: END OF BUFFER at bit_idx=%0d. Stopping.", current_bit_idx);
+            disable VLIW_SCAN;                     // <-- ADDED
+          end
+
+          instr_16bit = FetchBuffer[current_bit_idx +: 16];
+          is_32bit = (instr_16bit[1:0] == 2'b11);
+
+          if (is_32bit) begin
+            next_instr = FetchBuffer[current_bit_idx +: 32];
+            $info("IFU: [PC=0x%h]   VLIW instr %0d (32b) at bit_idx=%0d : 0x%08h",
+                  PCF, i+1, current_bit_idx, next_instr);
+            current_bit_idx += 32;
+          end else begin
+            $info("IFU: [PC=0x%h]   VLIW instr %0d (16b) at bit_idx=%0d : 0x%04h",
+                  PCF, i+1, current_bit_idx, instr_16bit);
+            current_bit_idx += 16;
+          end
+        end
+      end
+    end
+    end
+
     end else begin : passthrough
       assign IFUHADDR = PCPF;
       logic [1:0] BusRW;
@@ -301,6 +376,8 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
                                                       FetchBuffer[64-1:32], {16'b0, FetchBuffer[64-1:48]},
                                                       PCSpillF[2:1], ShiftUncachedInstr);
     else mux2 #(32) UncachedShiftInstrMux(FetchBuffer[32-1:0], {16'b0, FetchBuffer[32-1:16]}, PCSpillF[1], ShiftUncachedInstr);
+
+
   end else begin : nobus // block: bus
     assign {IFUHADDR, IFUHWRITE, IFUHSIZE, IFUHBURST, IFUHTRANS, 
             BusStall, CacheCommittedF, BusCommittedF, FetchBuffer} = '0;   
@@ -311,6 +388,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   assign IFUCacheBusStallF = ICacheStallF | BusStall;
   assign IFUStallF = IFUCacheBusStallF | SelSpillNextF;
   assign GatedStallD = StallD & ~SelSpillNextF;
+
   
   flopenl #(32) AlignedInstrRawDFlop(clk, reset | FlushD, ~StallD, PostSpillInstrRawF, nop, InstrRawD);
 
@@ -390,6 +468,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
     assign InstrD = InstrRawD;
     assign IllegalIEUInstrD = IllegalBaseInstrD;
   end
+
   assign IllegalIEUFPUInstrD = IllegalIEUInstrD & (IllegalFPUInstrD | !P.F_SUPPORTED);
 
   // Misaligned PC logic
