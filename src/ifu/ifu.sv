@@ -156,7 +156,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   logic 		       InstrUpdateAF;                            // ITLB hit needs to update dirty or access bits
     
   ///////////////////////////////////////////
-  // VLIW Signal Declarations (conditional on P.LOG_HINTS)
+  // VLIW Signal Declarations (conditional on P.STARBUG_SUPPORTED)
   ///////////////////////////////////////////
   logic [31:0]   VLIWInstr0F, VLIWInstr1F, VLIWInstr2F, VLIWInstr3F;
   logic [3:0]    VLIWValidF;
@@ -331,7 +331,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
 
   logic [OFFSETLEN-1:0] fetch_byte_offset;
   integer bit_offset;
-  if (P.LOG_HINTS) begin : vliw_extract
+  if (P.STARBUG_SUPPORTED) begin : vliw_extract
   always_comb begin
     // --- defaults so no latches are inferred ---
     VLIWModeF    = 1'b0;
@@ -469,7 +469,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   // VLIW PC Increment Logic
   ///////////////////////////////////////////
 
-  if (P.LOG_HINTS) begin : vliw_pc_logic
+  if (P.STARBUG_SUPPORTED) begin : vliw_pc_logic
     logic [P.XLEN-1:0] VLIWBundleSizeF;
     logic [P.XLEN-1:0] PCPlusVLIWF;
     // Calculate total size of VLIW bundle in bytes
@@ -518,10 +518,6 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   end else begin : no_vliw_pc_logic
     // When VLIW is not supported, just pass through normal PC increment
     assign AdjustedPCPlus2or4F = PCPlus2or4F;
-  end
-
-  always @(posedge clk) begin
-      $info("IFU: [ADJ PC=0x%h] [NORMAL PC=0x%h]", AdjustedPCPlus2or4F, PCPlus2or4F);
   end
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -594,7 +590,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   ///////////////////////////////////////////
   // VLIW Decode Stage Registers
   ///////////////////////////////////////////
-  if (P.LOG_HINTS) begin : vliw_decode_regs
+  if (P.STARBUG_SUPPORTED) begin : vliw_decode_regs
     // Pipeline VLIW signals to Decode stage
     flopenrc #(1)    VLIWModeDReg(clk, reset, FlushD, ~StallD, VLIWModeF, VLIWModeD);
     flopenrc #(4)    VLIWValidDReg(clk, reset, FlushD, ~StallD, VLIWValidF, VLIWValidD);
@@ -618,7 +614,7 @@ module ifu import cvw::*;  #(parameter cvw_t P) (
   ///////////////////////////////////////////
   // VLIW Decompression
   ///////////////////////////////////////////
-  if (P.LOG_HINTS) begin : vliw_decomp_block
+  if (P.STARBUG_SUPPORTED) begin : vliw_decomp_block
     if (P.ZCA_SUPPORTED) begin: vliw_decomp
       logic IllegalVLIWComp0D, IllegalVLIWComp1D, IllegalVLIWComp2D, IllegalVLIWComp3D;
       

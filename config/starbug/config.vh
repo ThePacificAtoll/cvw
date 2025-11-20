@@ -45,8 +45,7 @@ localparam logic ZICOND_SUPPORTED   = 1; // Integer conditional operations
 
 
 // STARBUG Params
-localparam logic LOG_HINTS       = 1;
-localparam MAX_BUNDLE_LEN  = 32'd160; // must be less than line len to allow fetch to fit
+localparam logic STARBUG_SUPPORTED  = 1; // HINT based VLIW Bundle Support
 
 // Multiplication & division extensions
 // M implies (and in the configuration file requires) Zmmul
