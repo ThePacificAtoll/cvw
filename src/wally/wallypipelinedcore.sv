@@ -262,21 +262,19 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      ); 
 
   if (P.STARBUG_SUPPORTED) begin : rf
-    logic tieoff;
-    assign tieoff = 0;
     // Instantiate Widened regfile
     regfile_widened #(XLEN, E_SUPPORTED) regfile_widened (
       .clk(clk), .reset(reset),
-      .we3(we3), .we6(tieoff), .we9(tieoff), .we12(tieoff),
+      .we3(0), .we6(0), .we9(0), .we12(0),
       .a1(a1), .a2(a2), .a3(a3),
-      .a4(tieoff), .a5(tieoff), .a6(tieoff),
-      .a7(tieoff), .a8(tieoff), .a9(tieoff),
-      .a10(tieoff), .a11(tieoff), .a12(tieoff),
-      .wd3(wd3), .wd6(tieoff), .wd9(tieoff), .wd12(tieoff),
+      .a4(0), .a5(0), .a6(0),
+      .a7(0), .a8(0), .a9(0),
+      .a10(0), .a11(0), .a12(0),
+      .wd3(wd3), .wd6(0), .wd9(0), .wd12(0),
       .rd1(rd1), .rd2(rd2),
-      .rd4(tieoff), .rd5(tieoff),
-      .rd7(tieoff), .rd8(tieoff),
-      .rd10(tieoff), .rd11(tieoff)
+      .rd4(), .rd5(),
+      .rd7(), .rd8(),
+      .rd10(), .rd11()
     );
   end
 

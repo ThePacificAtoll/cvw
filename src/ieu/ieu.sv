@@ -113,34 +113,19 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   logic [1:0] CZeroE;                                        // {czero.nez, czero.eqz} instructions active
 
   // Relay signals to accomodate widened RegFile (for VLIW STARBUG)
-  // if (P.STARBUG_SUPPORTED) begin
-  //   assign rd1 = rd1_ieu;
-  //   assign rd2 = rd2_ieu;
-  //   assign we3_ieu = we3;
-  //   assign a1_ieu = a1;
-  //   assign a2_ieu = a2;
-  //   assign a3_ieu = a3;
-  //   assign wd3_ieu = wd3;
-  // end
+  if (P.STARBUG_SUPPORTED) begin
+    assign rd1 = rd1_ieu;
+    assign rd2 = rd2_ieu;
+    assign we3_ieu = we3;
+    assign a1_ieu = a1;
+    assign a2_ieu = a2;
+    assign a3_ieu = a3;
+    assign wd3_ieu = wd3;
+  end
 
   logic [P.XLEN-1:0] rd1, rd2, wd3;
   logic [4:0]        a1, a2, a3;
   logic              we3;
-
-  // 2. Assign the IEU ports (with _ieu suffix) to the internal signals
-  // We do this unconditionally so the ports always have valid logic
-  assign rd1 = rd1_ieu;
-  assign rd2 = rd2_ieu;
-  assign we3_ieu = we3;
-  assign a1_ieu = a1;
-  assign a2_ieu = a2;
-  assign a3_ieu = a3;
-  assign wd3_ieu = wd3;
-
-
-
-
-
 
   controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
