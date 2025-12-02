@@ -212,7 +212,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .VLIWValidD, .VLIWModeD
     ); 
 
-  // PRINT DECODED VLIW BUNDLES FOR DEBUGGING
+  // PRINT DECODED VLIW BUNDLES FOR STARBUG DEBUGGING
   always @(posedge clk) begin
     if (VLIWModeD) begin
       if (VLIWValidD[0]) begin
@@ -261,22 +261,23 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .wd3_ieu(wd3)
      ); 
 
-  if (P.STARBUG_SUPPORTED) begin : rf
+  // WIDENED STARBUG REGFILE
+  logic [P.XLEN:0] rd4, rd5, rd7, rd8, rd10, rd11;
     // Instantiate Widened regfile
-    regfile_widened #(XLEN, E_SUPPORTED) regfile_widened (
+    regfile_widened #(P.XLEN, P.E_SUPPORTED) regfile_widened (
       .clk(clk), .reset(reset),
-      .we3(0), .we6(0), .we9(0), .we12(0),
+      .we3(we3), .we6(0), .we9(0), .we12(0),
       .a1(a1), .a2(a2), .a3(a3),
-      .a4(0), .a5(0), .a6(0),
-      .a7(0), .a8(0), .a9(0),
-      .a10(0), .a11(0), .a12(0),
-      .wd3(wd3), .wd6(0), .wd9(0), .wd12(0),
+      .a4(4'b1), .a5(4'b1), .a6(4'b0),
+      .a7(4'b1), .a8(4'b1), .a9(4'b0),
+      .a10(4'b1), .a11(4'b1), .a12(4'b0),
+      .wd3(wd3), .wd6(32'b0), .wd9(32'b0), .wd12(32'b0),
       .rd1(rd1), .rd2(rd2),
-      .rd4(), .rd5(),
-      .rd7(), .rd8(),
-      .rd10(), .rd11()
+      .rd4(rd4), .rd5(rd5),
+      .rd7(rd7), .rd8(rd8),
+      .rd10(rd10), .rd11(rd11)
     );
-  end
+  // END STARBUG REGFILE
 
 
   lsu #(P) lsu(

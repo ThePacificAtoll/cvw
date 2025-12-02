@@ -77,34 +77,12 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
 
 
   // Widened Regfile Signals (relay from inside datapath to outside IEU)
-  input  logic [XLEN-1:0]  rd1, rd2,                         // Read data for ports 1, 2
+  input  logic [P.XLEN-1:0]  rd1, rd2,                         // Read data for ports 1, 2
   output logic             we3,                              // Write enable
   output logic [4:0]       a1, a2, a3,                       // Source registers to read (a1, a2), destination register to write (a3)
-  output logic [XLEN-1:0]  wd3                               // Write data for port 3
+  output logic [P.XLEN-1:0]  wd3                               // Write data for port 3
 
 );
-
-  // Assignments to make if STARBUG VLIW is supported
-  logic tieoff;
-  assign tieoff = 0;
-
-  if (P.STARBUG_SUPPORTED) begin
-    assign we3 = RegWriteW;
-    assign a1 = Rs1D;
-    assign a2 = Rs2D;
-    assign a3 = RdW;
-    assign wd3 = ResultW;
-    assign R1D = rd1;
-    assign R2D = rd2;
-
-  end else begin
-    assign we3 = tieoff;
-    assign a1 = tieoff;
-    assign a2 = tieoff;
-    assign a3 = tieoff;
-    assign wd3 = tieoff;
-  end
-
 
   // Fetch stage signals
   // Decode stage signals
@@ -125,11 +103,18 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IFCvtResultW;                   // Result from IEU, signle-cycle FPU op, or 2-cycle FCVT float to int 
   logic [P.XLEN-1:0] MulDivResultW;                  // Multiply always comes from MDU.  Divide could come from MDU or FPU (when using fdivsqrt for integer division)
 
+  // Assignments to make for STARBUG VLIW
+  assign we3 = RegWriteW;
+  assign a1 = Rs1D;
+  assign a2 = Rs2D;
+  assign a3 = RdW;
+  assign wd3 = ResultW;
+  assign R1D = rd1;
+  assign R2D = rd2;
+
   // Decode stage
-  // Instantiate only if not VLIW mode (STARBUG)
-  if (!P.STARBUG_SUPPORTED) begin
-    regfile #(P.XLEN, P.E_SUPPORTED) regf(clk, reset, RegWriteW, Rs1D, Rs2D, RdW, ResultW, R1D, R2D);
-  end
+  // THIS IS ORIGINAL NON STARBUG REGFILE INSTANTIATION
+  // regfile #(P.XLEN, P.E_SUPPORTED) regf(clk, reset, RegWriteW, Rs1D, Rs2D, RdW, ResultW, R1D, R2D);
   extend #(P)        ext(.InstrD(InstrD[31:7]), .ImmSrcD, .ImmExtD);
  
   // Execute stage pipeline register and logic

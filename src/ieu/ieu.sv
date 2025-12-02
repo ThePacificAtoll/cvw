@@ -81,10 +81,10 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   output logic              CSRWriteFenceM,                  // CSR write or fence instruction needs to flush subsequent instructions
 
   // Widened Regfile Signals (relay from inside datapath to outside IEU)
-  input  logic [XLEN-1:0]  rd1_ieu, rd2_ieu,                 // Read data for ports 1, 2
+  input  logic [P.XLEN-1:0]  rd1_ieu, rd2_ieu,                 // Read data for ports 1, 2
   output logic             we3_ieu,                          // Write enable
   output logic [4:0]       a1_ieu, a2_ieu, a3_ieu,           // Source registers to read (a1, a2), destination register to write (a3)
-  output logic [XLEN-1:0]  wd3_ieu                           // Write data for port 3
+  output logic [P.XLEN-1:0]  wd3_ieu                           // Write data for port 3
 );
 
   logic [2:0] ImmSrcD;                                       // Select type of immediate extension 
@@ -113,19 +113,16 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   logic [1:0] CZeroE;                                        // {czero.nez, czero.eqz} instructions active
 
   // Relay signals to accomodate widened RegFile (for VLIW STARBUG)
-  if (P.STARBUG_SUPPORTED) begin
-    assign rd1 = rd1_ieu;
-    assign rd2 = rd2_ieu;
-    assign we3_ieu = we3;
-    assign a1_ieu = a1;
-    assign a2_ieu = a2;
-    assign a3_ieu = a3;
-    assign wd3_ieu = wd3;
-  end
-
   logic [P.XLEN-1:0] rd1, rd2, wd3;
   logic [4:0]        a1, a2, a3;
   logic              we3;
+  assign rd1 = rd1_ieu;
+  assign rd2 = rd2_ieu;
+  assign we3_ieu = we3;
+  assign a1_ieu = a1;
+  assign a2_ieu = a2;
+  assign a3_ieu = a3;
+  assign wd3_ieu = wd3;
 
   controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
@@ -147,7 +144,10 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .PCE, .PCLinkE, .FlagsE, .IEUAdrE, .ForwardedSrcAE, .ForwardedSrcBE, .BSelectE, .ZBBSelectE, .BALUControlE, .BMUActiveE, .CZeroE,
     .StallM, .FlushM, .FWriteIntM, .FIntResM, .SrcAM, .WriteDataM, .FCvtIntW,
     .StallW, .FlushW, .RegWriteW, .IntDivW, .SquashSCW, .ResultSrcW, .ReadDataW, .FCvtIntResW,
-    .CSRReadValW, .MDUResultW, .FIntDivResultW, .RdW, .rd1, .rd2, .we3, .a1, .a2, .a3, .wd3);      
+    .CSRReadValW, .MDUResultW, .FIntDivResultW, .RdW
+    ,.rd1, .rd2, .we3, 
+    .a1, .a2, .a3, .wd3
+    );      
 
 
 endmodule
