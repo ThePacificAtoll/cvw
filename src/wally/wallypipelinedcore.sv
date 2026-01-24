@@ -214,7 +214,8 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .PCLinkE, .PCSrcE, .IEUAdrE, .IEUAdrM, .PCE, .BPWrongE,  .BPWrongM,
     // Mem
     .CommittedF, .EPCM, .TrapVectorM, .RetM, .TrapM, .InvalidateICacheM, .CSRWriteFenceM,
-    .InstrD, .InstrM, .InstrOrigM, .PCM, .PCSpillM, .IClassM, .BPDirWrongM,
+    .InstrD, .InstrM, 
+    .InstrM_1, .InstrM_2, .InstrM_3, .InstrOrigM, .PCM, .PCSpillM, .IClassM, .BPDirWrongM,
     .BTAWrongM, .RASPredPCWrongM, .IClassWrongM,
     // Faults out
     .IllegalBaseInstrD, .IllegalFPUInstrD, .InstrPageFaultF, .IllegalIEUFPUInstrD, .InstrMisalignedFaultM,
@@ -228,23 +229,23 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
     .VLIWValidD, .VLIWModeD); 
 
     
-  // // PRINT DECODED VLIW BUNDLES FOR STARBUG DEBUGGING
-  // always @(posedge clk) begin
-  //   if (VLIWModeD) begin
-  //     if (VLIWValidD[0]) begin
-  //       $info("CORE: [PC~=0x%h] VLIW instr 0 (32b) 0x%08h", - PCE, VLIWInstr0D);
-  //     end
-  //     if (VLIWValidD[1]) begin
-  //       $info("CORE: [PC~=0x%h] VLIW instr 1 (32b) 0x%08h", - PCE, VLIWInstr1D);
-  //     end
-  //     if (VLIWValidD[2]) begin
-  //       $info("CORE: [PC~=0x%h] VLIW instr 2 (32b) 0x%08h", - PCE, VLIWInstr2D);
-  //     end
-  //     if (VLIWValidD[3]) begin
-  //       $info("CORE: [PC~=0x%h] VLIW instr 3 (32b) 0x%08h", - PCE, VLIWInstr3D);
-  //     end
-  //   end
-  // end
+  // PRINT DECODED VLIW BUNDLES FOR STARBUG DEBUGGING
+  always @(posedge clk) begin
+    if (VLIWModeD) begin
+      if (VLIWValidD[0]) begin
+        $info("CORE: [PC~=0x%h] VLIW instr 0 (32b) 0x%08h", PCE, VLIWInstr0D);
+      end
+      if (VLIWValidD[1]) begin
+        $info("CORE: [PC~=0x%h] VLIW instr 1 (32b) 0x%08h", PCE, VLIWInstr1D);
+      end
+      if (VLIWValidD[2]) begin
+        $info("CORE: [PC~=0x%h] VLIW instr 2 (32b) 0x%08h", PCE, VLIWInstr2D);
+      end
+      if (VLIWValidD[3]) begin
+        $info("CORE: [PC~=0x%h] VLIW instr 3 (32b) 0x%08h", PCE, VLIWInstr3D);
+      end
+    end
+  end
 
   // integer execution unit: integer register file, datapath and controller
   ieu #(P) 
