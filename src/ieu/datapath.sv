@@ -73,7 +73,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.XLEN-1:0] MDUResultW,              // MDU (Multiply/divide unit) result
   input  logic [P.XLEN-1:0] FIntDivResultW,          // FPU's integer divide result
   input  logic [4:0]        RdW,                      // Destination register
-   // Hazard Unit signals 
+   // Hazard Unit signals
 
 
   // Widened Regfile Signals (relay from inside datapath to outside IEU)
@@ -113,7 +113,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   assign R2D = rd2;
 
   // Decode stage
-  // THIS IS ORIGINAL NON STARBUG REGFILE INSTANTIATION
+  // THIS COMMENTED OUT LINE BELOW IS ORIGINAL NON STARBUG REGFILE INSTANTIATION
   // regfile #(P.XLEN, P.E_SUPPORTED) regf(clk, reset, RegWriteW, Rs1D, Rs2D, RdW, ResultW, R1D, R2D);
   extend #(P)        ext(.InstrD(InstrD[31:7]), .ImmSrcD, .ImmExtD);
  
