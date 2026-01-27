@@ -578,11 +578,11 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
 
   // hazard unit implementation with ORed signals from all 4 FU channels
   hazard hzu(
-    .BPWrongE, .CSRWriteFenceM_OR, .RetM, .TrapM,
-    .StructuralStallD_OR,
-    .LSUStallM_OR, .IFUStallF,
-    .FPUStallD_OR, .ExternalStall,
-    .DivBusyE_OR, .FDivBusyE_OR,
+    .BPWrongE, .CSRWriteFenceM(CSRWriteFenceM_OR), .RetM, .TrapM,
+    .StructuralStallD(StructuralStallD_OR),
+    .LSUStallM(LSUStallM_OR), .IFUStallF,
+    .FPUStallD(FPUStallD_OR), .ExternalStall,
+    .DivBusyE(DivBusyE_OR), .FDivBusyE(FDivBusyE_OR),
     .wfiM, .IntPendingM,
     // Stall & flush outputs
     .StallF, .StallD, .StallE, .StallM, .StallW,
