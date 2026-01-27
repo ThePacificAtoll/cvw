@@ -566,13 +566,23 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
             HWSTRB, HWRITE, HSIZE, HBURST, HPROT, HTRANS, HMASTLOCK} = '0;
   end
 
-  // global stall and flush control
+  // global stall and flush control:
+    // hazard unit inputs ORed for STARBUG VLIW implementation
+  logic CSRWriteFenceM_OR = CSRWriteFenceM | CSRWriteFenceM_1 | CSRWriteFenceM_2 | CSRWriteFenceM_3;
+  logic StructuralStallD_OR = StructuralStallD | StructuralStallD_1 | StructuralStallD_2 | StructuralStallD_3;
+  logic LSUStallM_OR = LSUStallM | LSUStallM_1 | LSUStallM_2 | LSUStallM_3;
+  logic FPUStallD_OR = FPUStallD | FPUStallD_1 | FPUStallD_2 | FPUStallD_3;
+  logic DivBusyE_OR = DivBusyE | DivBusyE_1 | DivBusyE_2 | DivBusyE_3;
+  logic FDivBusyE_OR = FDivBusyE | FDivBusyE_1 | FDivBusyE_2 | FDivBusyE_3;
+
+
+  // hazard unit implementation with ORed signals from all 4 FU channels
   hazard hzu(
-    .BPWrongE, .CSRWriteFenceM, .RetM, .TrapM,
-    .StructuralStallD,
-    .LSUStallM, .IFUStallF,
-    .FPUStallD, .ExternalStall,
-    .DivBusyE, .FDivBusyE,
+    .BPWrongE, .CSRWriteFenceM_OR, .RetM, .TrapM,
+    .StructuralStallD_OR,
+    .LSUStallM_OR, .IFUStallF,
+    .FPUStallD_OR, .ExternalStall,
+    .DivBusyE_OR, .FDivBusyE_OR,
     .wfiM, .IntPendingM,
     // Stall & flush outputs
     .StallF, .StallD, .StallE, .StallM, .StallW,
