@@ -3,7 +3,7 @@
 //
 // Written: David_Harris@hmc.edu, Sarah.Harris@unlv.edu
 // Created: 9 January 2021
-// Modified: jc165@rice.edu 24 November 2025
+// Modified: jc165@rice.edu 28 January 2026
 //
 // Purpose: Wally Integer Datapath
 // 
@@ -72,16 +72,20 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   input  logic [P.XLEN-1:0] CSRReadValW,             // CSR read result
   input  logic [P.XLEN-1:0] MDUResultW,              // MDU (Multiply/divide unit) result
   input  logic [P.XLEN-1:0] FIntDivResultW,          // FPU's integer divide result
-  input  logic [4:0]        RdW,                      // Destination register
+  input  logic [4:0]        RdW,                     // Destination register
    // Hazard Unit signals
 
 
   // Widened Regfile Signals (relay from inside datapath to outside IEU)
-  input  logic [P.XLEN-1:0]  rd1, rd2,                         // Read data for ports 1, 2
-  output logic             we3,                              // Write enable
-  output logic [4:0]       a1, a2, a3,                       // Source registers to read (a1, a2), destination register to write (a3)
-  output logic [P.XLEN-1:0]  wd3                               // Write data for port 3
+  input  logic [P.XLEN-1:0]  rd1, rd2,               // Read data for ports 1, 2
+  output logic             we3,                      // Write enable
+  output logic [4:0]       a1, a2, a3,               // Source registers to read (a1, a2), destination register to write (a3)
+  output logic [P.XLEN-1:0]  wd3,                    // Write data for port 3
 
+  // VLIW Forwarding Ports
+  input ForwardSelect,                                            // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
+  input [P.XLEN-1:0] ResultW_1, ResultW_2, ResultW_3,             // These are the results from other FUs' WB Stage
+  input [P.XLEN-1:0] IFResultM_1, IFResultM_2, IFResultM_3,       // These are the results from other FUs' Mem Stage
 );
 
   // Fetch stage signals
@@ -121,9 +125,33 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   flopenrc #(P.XLEN) RD1EReg(clk, reset, FlushE, ~StallE, R1D, R1E);
   flopenrc #(P.XLEN) RD2EReg(clk, reset, FlushE, ~StallE, R2D, R2E);
   flopenrc #(P.XLEN) ImmExtEReg(clk, reset, FlushE, ~StallE, ImmExtD, ImmExtE);
+
+
+  // Selection logic for which forwarded result to use:
+  logic [P.XLEN-1:0] ResultW_Select;
+  logic [P.XLEN-1:0] IFResultM_Select;
+
+  case (ForwardSelect)
+    2'b00 : begin
+      ResultW_Select = ResultW;
+      IFResultM_Select = IFResultM;
+    end
+    2'b01 : begin
+      ResultW_Select = ResultW_1;
+      IFResultM_Select = IFResultM_1;
+    end
+    2'b10 : begin
+      ResultW_Select = ResultW_2;
+      IFResultM_Select = IFResultM_2;
+    end
+    2'b11 : begin
+      ResultW_Select = ResultW_3;
+      IFResultM_Select = IFResultM_3;
+    end
+  endcase
   
-  mux3  #(P.XLEN)  faemux(R1E, ResultW, IFResultM, ForwardAE, ForwardedSrcAE);
-  mux3  #(P.XLEN)  fbemux(R2E, ResultW, IFResultM, ForwardBE, ForwardedSrcBE);
+  mux3  #(P.XLEN)  faemux(R1E, ResultW_Select, IFResultM_Select, ForwardAE, ForwardedSrcAE);  // Depending on ForwardAE, forward/send either R1E, Selected ResultW, or Selected IFResultM
+  mux3  #(P.XLEN)  fbemux(R2E, ResultW_Select, IFResultM_Select, ForwardBE, ForwardedSrcBE);
   comparator #(P.XLEN) comp(ForwardedSrcAE, ForwardedSrcBE, BranchSignedE, FlagsE);
   mux2  #(P.XLEN)  srcamux(ForwardedSrcAE, PCE, ALUSrcAE, SrcAE);
   mux2  #(P.XLEN)  srcbmux(ForwardedSrcBE, ImmExtE, ALUSrcBE, SrcBE);
