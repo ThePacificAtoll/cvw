@@ -181,4 +181,6 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     );      
 
 
+// TODO: Add correct ports to the ieu topfile and adjust wallypipelinedcore to connect inter-ieu wires
+
 endmodule
