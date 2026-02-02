@@ -567,14 +567,20 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   end
 
   // global stall and flush control:
-    // hazard unit inputs ORed for STARBUG VLIW implementation
-  logic CSRWriteFenceM_OR = CSRWriteFenceM | CSRWriteFenceM_1 | CSRWriteFenceM_2 | CSRWriteFenceM_3;
-  logic StructuralStallD_OR = StructuralStallD | StructuralStallD_1 | StructuralStallD_2 | StructuralStallD_3;
-  logic LSUStallM_OR = LSUStallM | LSUStallM_1 | LSUStallM_2 | LSUStallM_3;
-  logic FPUStallD_OR = FPUStallD | FPUStallD_1 | FPUStallD_2 | FPUStallD_3;
-  logic DivBusyE_OR = DivBusyE | DivBusyE_1 | DivBusyE_2 | DivBusyE_3;
-  logic FDivBusyE_OR = FDivBusyE | FDivBusyE_1 | FDivBusyE_2 | FDivBusyE_3;
+  // hazard unit inputs ORed for STARBUG VLIW implementation
+  logic CSRWriteFenceM_OR;
+  logic StructuralStallD_OR;
+  logic LSUStallM_OR;
+  logic FPUStallD_OR;
+  logic DivBusyE_OR;
+  logic FDivBusyE_OR;
 
+  assign CSRWriteFenceM_OR = CSRWriteFenceM | CSRWriteFenceM_1 | CSRWriteFenceM_2 | CSRWriteFenceM_3;
+  assign StructuralStallD_OR = StructuralStallD | StructuralStallD_1 | StructuralStallD_2 | StructuralStallD_3;
+  assign LSUStallM_OR = LSUStallM; // | LSUStallM_1 | LSUStallM_2 | LSUStallM_3;
+  assign FPUStallD_OR = FPUStallD | FPUStallD_1 | FPUStallD_2 | FPUStallD_3;
+  assign DivBusyE_OR = DivBusyE | DivBusyE_1 | DivBusyE_2 | DivBusyE_3;
+  assign FDivBusyE_OR = FDivBusyE | FDivBusyE_1 | FDivBusyE_2 | FDivBusyE_3;
 
   // hazard unit implementation with ORed signals from all 4 FU channels
   hazard hzu(
