@@ -83,10 +83,10 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   output logic [P.XLEN-1:0]  wd3,                    // Write data for port 3
 
   // VLIW Forwarding Ports
-  input ForwardSelect,                                            // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
+  input [1:0] ForwardSelect,                                      // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
   input [P.XLEN-1:0] ResultW_1, ResultW_2, ResultW_3,             // These are the results from other FUs' WB Stage
   input [P.XLEN-1:0] IFResultM_1, IFResultM_2, IFResultM_3,       // These are the results from other FUs' Mem Stage
-  output [P.XLEN-1:0] ResultW, IFResultM_0                          // These are the results from this ieu instance.
+  output [P.XLEN-1:0] ResultW, IFResultM_0                        // These are the results from this ieu instance.
 );
 
   // Fetch stage signals

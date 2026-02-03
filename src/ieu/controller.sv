@@ -468,7 +468,7 @@ module controller import cvw::*;  #(parameter cvw_t P) (
 
   // This is the signal that indicates which FU this ieu should be recieving forwarded results from.
   // If 0, it indicates the ieu's own Mem or WB stage will forward its results.
-  logic ForwardSelectController;
+  logic [1:0] ForwardSelectController;
   assign ForwardSelect = ForwardSelectController;
 
   // Forwarding logic !To Do! Add cross ieu forwards
