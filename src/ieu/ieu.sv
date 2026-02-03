@@ -72,16 +72,6 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   output logic [4:0]        RdW,                             // Destination register
   input  logic [P.XLEN-1:0] ReadDataW,                       // LSU's read data
 
-
-  // Modified STARBUG Signals for Forwarding -----------------------------------------
-
-  input Rs1E_1, Rs1E_2, Rs1E_3,                              // Source register 1 in execute stage of parallel FUs
-  input Rs2E_1, Rs2E_2, Rs2E_3,                              // Source register 2 in execute stage of parallel FUs
-  input RegWriteM_1, RegWriteM_2, RegWriteM_3,               // Write enable of instruction in Mem stage of parallel FUs
-  input RegWriteW_1, RegWriteW_2, RegWriteW_3,               // Write enable of instruction in WB stage of parallel FUs
-
-  // ---------------------------------------------------------------------------------
-
   // Hazard unit signals
   input  logic              StallD, StallE, StallM, StallW,  // Stall signals from hazard unit
   input  logic              FlushD, FlushE, FlushM, FlushW,  // Flush signals
@@ -92,10 +82,21 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   output logic              CSRWriteFenceM,                  // CSR write or fence instruction needs to flush subsequent instructions
 
   // Widened Regfile Signals (relay from inside datapath to outside IEU)
-  input  logic [P.XLEN-1:0]  rd1_ieu, rd2_ieu,                 // Read data for ports 1, 2
+  input  logic [P.XLEN-1:0]  rd1_ieu, rd2_ieu,               // Read data for ports 1, 2
   output logic             we3_ieu,                          // Write enable
   output logic [4:0]       a1_ieu, a2_ieu, a3_ieu,           // Source registers to read (a1, a2), destination register to write (a3)
-  output logic [P.XLEN-1:0]  wd3_ieu                           // Write data for port 3
+  output logic [P.XLEN-1:0]  wd3_ieu,                        // Write data for port 3
+
+  // Modified STARBUG Signals for Forwarding -----------------------------------------
+
+  input  logic [4:0] RdW_1, RdW_2, RdW_3,                                  // These inputs are the WB stage dest reg selections from other FUs, to be used for forwarding check
+  input  logic [4:0] RdM_1, RdM_2, RdM_3,                                  // These inputs are the Mem stage dest reg selections from other FUs, to be used for forwarding check
+  input  logic [P.XLEN-1:0] ResultW_1, ResultW_2, ResultW_3,               // These inputs are the results from other FUs' WB Stage
+  input  logic [P.XLEN-1:0] IFResultM_1, IFResultM_2, IFResultM_3,         // These inputs are the results from other FUs' Mem Stage
+  output logic RegWriteMOut, RegWriteWOut,                                 // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
+  output logic ResultW, IFResultM                                          // These outputs are WB and Mem stage results of this ieu instance
+  
+  // ---------------------------------------------------------------------------------
 );
 
   logic [2:0] ImmSrcD;                                       // Select type of immediate extension 
@@ -140,6 +141,8 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   assign a3_ieu = a3;
   assign wd3_ieu = wd3;
 
+  logic [1:0] ForwardSelectControllerToDatapath;
+
   controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
     .IllegalIEUFPUInstrD, .IllegalBaseInstrD, 
@@ -157,10 +160,10 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .RdW, .RdE, .RdM,
 
     // New VLIW Forwarding ports
-    .RegWriteMOut(), .RegWriteWOut(),   // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
-    .RdW_1(), .RdW_2(), .RdW_3(),       // These inputs are the WB stage dest reg selections from other FUs, to be used for forwarding check
-    .RdM_1(), .RdM_2(), .RdM_3(),       // These inputs are the Mem stage dest reg selections from other FUs, to be used for forwarding check
-    .ForwardSelect()                    // This output is a 2-bit signal indicating which FU this ieu has decided to accept forwarded results from (0 indicates itself)
+    .RegWriteMOut(RegWriteMOut), .RegWriteWOut(RegWriteWOut),   // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
+    .RdW_1(RdW_1), .RdW_2(RdW_2), .RdW_3(RdW_3),                // These inputs are the WB stage dest reg selections from other FUs, to be used for forwarding check
+    .RdM_1(RdM_1), .RdM_2(RdM_2), .RdM_3(RdM_3),                // These inputs are the Mem stage dest reg selections from other FUs, to be used for forwarding check
+    .ForwardSelect(ForwardSelectControllerToDatapath)           // This output is a 2-bit internal signal indicating which FU this ieu has decided to accept forwarded results from (0 indicates itself)
     );
 
   datapath #(P) dp(
@@ -174,13 +177,13 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .a1, .a2, .a3, .wd3,
 
     // New VLIW Forwarding Ports
-    .ForwardSelect(),                                       // This input is the forward select signal from this ieu instance's controller module
-    .ResultW_1(), .ResultW_2(), .ResultW_3(),               // These inputs are the results from other FUs' WB Stage
-    .IFResultM_1(), .IFResultM_2(), .IFResultM_3(),         // These inputs are the results from other FUs' Mem Stage
-
+    .ForwardSelect(ForwardSelectControllerToDatapath),                                       // This input is the forward select signal from this ieu instance's controller module
+    .ResultW_1(ResultW_1), .ResultW_2(ResultW_2), .ResultW_3(ResultW_3),                     // These inputs are the results from other FUs' WB Stage
+    .IFResultM_1(IFResultM_1), .IFResultM_2(IFResultM_2), .IFResultM_3(IFResultM_3),         // These inputs are the results from other FUs' Mem Stage
+    .ResultW(), .IFResultM_0()                                                                  // These are the Mem and WB stage results of this ieu instance
     );      
 
 
-// TODO: Add correct ports to the ieu topfile and adjust wallypipelinedcore to connect inter-ieu wires
+// TODO: adjust wallypipelinedcore to connect inter-ieu wires, also result outputs need to be brought out from datapath
 
 endmodule

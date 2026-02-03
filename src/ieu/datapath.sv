@@ -86,6 +86,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   input ForwardSelect,                                            // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
   input [P.XLEN-1:0] ResultW_1, ResultW_2, ResultW_3,             // These are the results from other FUs' WB Stage
   input [P.XLEN-1:0] IFResultM_1, IFResultM_2, IFResultM_3,       // These are the results from other FUs' Mem Stage
+  output [P.XLEN-1:0] ResultW, IFResultM_0                          // These are the results from this ieu instance.
 );
 
   // Fetch stage signals
@@ -102,7 +103,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IFResultM;                      // Result from either IEU or single-cycle FPU op writing an integer register
   // Writeback stage signals
   logic [P.XLEN-1:0] SCResultW;                      // Store Conditional result
-  logic [P.XLEN-1:0] ResultW;                        // Result to write to register file
+  logic [P.XLEN-1:0] ResultW_internal;                        // Result to write to register file
   logic [P.XLEN-1:0] IFResultW;                      // Result from either IEU or single-cycle FPU op writing an integer register
   logic [P.XLEN-1:0] IFCvtResultW;                   // Result from IEU, signle-cycle FPU op, or 2-cycle FCVT float to int 
   logic [P.XLEN-1:0] MulDivResultW;                  // Multiply always comes from MDU.  Divide could come from MDU or FPU (when using fdivsqrt for integer division)
@@ -112,7 +113,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   assign a1 = Rs1D;
   assign a2 = Rs2D;
   assign a3 = RdW;
-  assign wd3 = ResultW;
+  assign wd3 = ResultW_internal;
   assign R1D = rd1;
   assign R2D = rd2;
 
@@ -128,27 +129,30 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
 
 
   // Selection logic for which forwarded result to use:
+  assign IFResultM_0 = IFResultM;
   logic [P.XLEN-1:0] ResultW_Select;
   logic [P.XLEN-1:0] IFResultM_Select;
 
-  case (ForwardSelect)
-    2'b00 : begin
-      ResultW_Select = ResultW;
-      IFResultM_Select = IFResultM;
-    end
-    2'b01 : begin
-      ResultW_Select = ResultW_1;
-      IFResultM_Select = IFResultM_1;
-    end
-    2'b10 : begin
-      ResultW_Select = ResultW_2;
-      IFResultM_Select = IFResultM_2;
-    end
-    2'b11 : begin
-      ResultW_Select = ResultW_3;
-      IFResultM_Select = IFResultM_3;
-    end
-  endcase
+  always_comb begin
+    case (ForwardSelect)
+      2'b00 : begin
+        ResultW_Select = ResultW_internal;
+        IFResultM_Select = IFResultM;
+      end
+      2'b01 : begin
+        ResultW_Select = ResultW_1;
+        IFResultM_Select = IFResultM_1;
+      end
+      2'b10 : begin
+        ResultW_Select = ResultW_2;
+        IFResultM_Select = IFResultM_2;
+      end
+      2'b11 : begin
+        ResultW_Select = ResultW_3;
+        IFResultM_Select = IFResultM_3;
+      end
+    endcase
+  end
   
   mux3  #(P.XLEN)  faemux(R1E, ResultW_Select, IFResultM_Select, ForwardAE, ForwardedSrcAE);  // Depending on ForwardAE, forward/send either R1E, Selected ResultW, or Selected IFResultM
   mux3  #(P.XLEN)  fbemux(R2E, ResultW_Select, IFResultM_Select, ForwardBE, ForwardedSrcBE);

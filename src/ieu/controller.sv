@@ -479,80 +479,82 @@ module controller import cvw::*;  #(parameter cvw_t P) (
     // Following logic assumes that multiple instructions in STARBUG VLIW bundles cannot write to the same register.
     // As such only one FU can be writing to this ieu's source register at any one time.
 
-    if (Rs1E != 5'b0)     // if current instance source reg 1 in E stage is not zero, check mem and wb stages
+    if (Rs1E != 5'b0) begin     // if current instance source reg 1 in E stage is not zero, check mem and wb stages
       // Check all Mem stage destinations first
-      if      ((Rs1E == RdM) & RegWriteM){
+      if      ((Rs1E == RdM) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelect = 2'b00;
-      }
-      else if ((Rs1E == RdM_1) & RegWriteM){
+        ForwardSelectController = 2'b00;
+      end
+      else if ((Rs1E == RdM_1) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelect = 2'b01;
-      }
-      else if ((Rs1E == RdM_2) & RegWriteM){
+        ForwardSelectController = 2'b01;
+      end
+      else if ((Rs1E == RdM_2) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelect = 2'b10;
-      }
-      else if ((Rs1E == RdM_3) & RegWriteM){
+        ForwardSelectController = 2'b10;
+      end
+      else if ((Rs1E == RdM_3) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelect = 2'b11;
-      }
+        ForwardSelectController = 2'b11;
+      end
 
       // Then check all WB stage destinations
-      else if ((Rs1E == RdW) & RegWriteW){
+      else if ((Rs1E == RdW) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelect = 2'b00;
-      }
-      else if ((Rs1E == RdW_1) & RegWriteW){
+        ForwardSelectController = 2'b00;
+      end
+      else if ((Rs1E == RdW_1) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelect = 2'b01;
-      }
-      else if ((Rs1E == RdW_2) & RegWriteW){
+        ForwardSelectController = 2'b01;
+      end
+      else if ((Rs1E == RdW_2) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelect = 2'b10;
-      }
-      else if ((Rs1E == RdW_3) & RegWriteW){
+        ForwardSelectController = 2'b10;
+      end
+      else if ((Rs1E == RdW_3) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelect = 2'b11;
-      }
+        ForwardSelectController = 2'b11;
+      end
+    end
 
  
-    if (Rs2E != 5'b0)     // if current instance source reg 2 in E stage is not zero, check mem and wb stages
+    if (Rs2E != 5'b0) begin     // if current instance source reg 2 in E stage is not zero, check mem and wb stages
     // Check all Mem stage destinations first
-      if      ((Rs2E == RdM) & RegWriteM){
+      if      ((Rs2E == RdM) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelect = 2'b00;
-      }
-      else if ((Rs2E == RdM_1) & RegWriteM){
+        ForwardSelectController = 2'b00;
+      end
+      else if ((Rs2E == RdM_1) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelect = 2'b01;
-      }
-      else if ((Rs2E == RdM_2) & RegWriteM){
+        ForwardSelectController = 2'b01;
+      end
+      else if ((Rs2E == RdM_2) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelect = 2'b10;
-      }
-      else if ((Rs2E == RdM_3) & RegWriteM){
+        ForwardSelectController = 2'b10;
+      end
+      else if ((Rs2E == RdM_3) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelect = 2'b11;
-      }
+        ForwardSelectController = 2'b11;
+      end
 
       // Then check all WB stage destinations
-      else if ((Rs2E == RdW) & RegWriteW){
+      else if ((Rs2E == RdW) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelect = 2'b00;
-      }
-      else if ((Rs2E == RdW_1) & RegWriteW){
+        ForwardSelectController = 2'b00;
+      end
+      else if ((Rs2E == RdW_1) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelect = 2'b01;
-      }
-      else if ((Rs2E == RdW_2) & RegWriteW){
+        ForwardSelectController = 2'b01;
+      end
+      else if ((Rs2E == RdW_2) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelect = 2'b10;
-      }
-      else if ((Rs2E == RdW_3) & RegWriteW){
+        ForwardSelectController = 2'b10;
+      end
+      else if ((Rs2E == RdW_3) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelect = 2'b11;
-      }
+        ForwardSelectController = 2'b11;
+      end
+    end
   end
 
   // Stall on dependent operations that finish in Mem Stage and can't bypass in time
