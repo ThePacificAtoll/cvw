@@ -141,7 +141,8 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   assign a3_ieu = a3;
   assign wd3_ieu = wd3;
 
-  logic [1:0] ForwardSelectControllerToDatapath;
+  logic [1:0] ForwardSelectControllerToDatapath_Rs1;
+  logic [1:0] ForwardSelectControllerToDatapath_Rs2;
 
   controller #(P) c(
     .clk, .reset, .StallD, .FlushD, .InstrD, .STATUS_FS, .ENVCFG_CBE, .ImmSrcD,
@@ -163,7 +164,8 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .RegWriteMOut(RegWriteMOut), .RegWriteWOut(RegWriteWOut),   // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
     .RdW_1(RdW_1), .RdW_2(RdW_2), .RdW_3(RdW_3),                // These inputs are the WB stage dest reg selections from other FUs, to be used for forwarding check
     .RdM_1(RdM_1), .RdM_2(RdM_2), .RdM_3(RdM_3),                // These inputs are the Mem stage dest reg selections from other FUs, to be used for forwarding check
-    .ForwardSelect(ForwardSelectControllerToDatapath)           // This output is a 2-bit internal signal indicating which FU this ieu has decided to accept forwarded results from (0 indicates itself)
+    .ForwardSelect_Rs1(ForwardSelectControllerToDatapath_Rs1),  // This output is a 2-bit internal signal indicating which FU this ieu has decided to accept forwarded results from (0 indicates itself)
+    .ForwardSelect_Rs2(ForwardSelectControllerToDatapath_Rs2)    // This output is a 2-bit internal signal indicating which FU this ieu has decided to accept forwarded results from (0 indicates itself)
     );
 
   datapath #(P) dp(
@@ -177,10 +179,11 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .a1, .a2, .a3, .wd3,
 
     // New VLIW Forwarding Ports
-    .ForwardSelect(ForwardSelectControllerToDatapath),                                       // This input is the forward select signal from this ieu instance's controller module
+    .ForwardSelect_Rs1(ForwardSelectControllerToDatapath_Rs1),                               // This input is the forward select signal from this ieu instance's controller module
+    .ForwardSelect_Rs2(ForwardSelectControllerToDatapath_Rs2),                               // This input is the forward select signal from this ieu instance's controller module
     .ResultW_1(ResultW_1), .ResultW_2(ResultW_2), .ResultW_3(ResultW_3),                     // These inputs are the results from other FUs' WB Stage
     .IFResultM_1(IFResultM_1), .IFResultM_2(IFResultM_2), .IFResultM_3(IFResultM_3),         // These inputs are the results from other FUs' Mem Stage
-    .ResultW(), .IFResultM_0()                                                                  // These are the Mem and WB stage results of this ieu instance
+    .ResultW(ResultW), .IFResultM_0(IFResultM)                                               // These are the Mem and WB stage results of this ieu instance
     );      
 
 

@@ -95,7 +95,8 @@ module controller import cvw::*;  #(parameter cvw_t P) (
 
   input  logic [4:0]  RdW_1, RdW_2, RdW_3,      // RdW signals routed in from other ieu instances for VLIW forwarding
   input  logic [4:0]  RdM_1, RdM_2, RdM_3,      // RdM signals routed in from other ieu instances for VLIW forwarding
-  output logic [1:0]  ForwardSelect             // This signal indicates which FU this ieu should be recieving forwarded results from
+  output logic [1:0]  ForwardSelect_Rs1,         // This signal indicates which FU this ieu should be recieving forwarded results from for source reg 1
+  output logic [1:0]  ForwardSelect_Rs2,        // This signal indicates which FU this ieu should be recieving forwarded results from for source reg 2
 );
 
   logic [4:0] Rs1E;                      // pipelined register sources
@@ -468,13 +469,18 @@ module controller import cvw::*;  #(parameter cvw_t P) (
 
   // This is the signal that indicates which FU this ieu should be recieving forwarded results from.
   // If 0, it indicates the ieu's own Mem or WB stage will forward its results.
-  logic [1:0] ForwardSelectController;
-  assign ForwardSelect = ForwardSelectController;
+  logic [1:0] ForwardSelectController_Rs1;
+  logic [1:0] ForwardSelectController_Rs2;
+  assign ForwardSelect_Rs1 = ForwardSelectController_Rs1;
+  assign ForwardSelect_Rs2 = ForwardSelectController_Rs2;
+
 
   // Forwarding logic !To Do! Add cross ieu forwards
   always_comb begin
     ForwardAE = 2'b00;
     ForwardBE = 2'b00;
+    ForwardSelectController_Rs1 = 2'b00;
+    ForwardSelectController_Rs2 = 2'b00;
 
     // Following logic assumes that multiple instructions in STARBUG VLIW bundles cannot write to the same register.
     // As such only one FU can be writing to this ieu's source register at any one time.
@@ -483,37 +489,37 @@ module controller import cvw::*;  #(parameter cvw_t P) (
       // Check all Mem stage destinations first
       if      ((Rs1E == RdM) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelectController = 2'b00;
+        ForwardSelectController_Rs1 = 2'b00;
       end
       else if ((Rs1E == RdM_1) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelectController = 2'b01;
+        ForwardSelectController_Rs1 = 2'b01;
       end
       else if ((Rs1E == RdM_2) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelectController = 2'b10;
+        ForwardSelectController_Rs1 = 2'b10;
       end
       else if ((Rs1E == RdM_3) & RegWriteM) begin
         ForwardAE = 2'b10;
-        ForwardSelectController = 2'b11;
+        ForwardSelectController_Rs1 = 2'b11;
       end
 
       // Then check all WB stage destinations
       else if ((Rs1E == RdW) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelectController = 2'b00;
+        ForwardSelectController_Rs1 = 2'b00;
       end
       else if ((Rs1E == RdW_1) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelectController = 2'b01;
+        ForwardSelectController_Rs1 = 2'b01;
       end
       else if ((Rs1E == RdW_2) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelectController = 2'b10;
+        ForwardSelectController_Rs1 = 2'b10;
       end
       else if ((Rs1E == RdW_3) & RegWriteW) begin
         ForwardAE = 2'b01;
-        ForwardSelectController = 2'b11;
+        ForwardSelectController_Rs1 = 2'b11;
       end
     end
 
@@ -522,37 +528,37 @@ module controller import cvw::*;  #(parameter cvw_t P) (
     // Check all Mem stage destinations first
       if      ((Rs2E == RdM) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelectController = 2'b00;
+        ForwardSelectController_Rs2 = 2'b00;
       end
       else if ((Rs2E == RdM_1) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelectController = 2'b01;
+        ForwardSelectController_Rs2 = 2'b01;
       end
       else if ((Rs2E == RdM_2) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelectController = 2'b10;
+        ForwardSelectController_Rs2 = 2'b10;
       end
       else if ((Rs2E == RdM_3) & RegWriteM) begin
         ForwardBE = 2'b10;
-        ForwardSelectController = 2'b11;
+        ForwardSelectController_Rs2 = 2'b11;
       end
 
       // Then check all WB stage destinations
       else if ((Rs2E == RdW) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelectController = 2'b00;
+        ForwardSelectController_Rs2 = 2'b00;
       end
       else if ((Rs2E == RdW_1) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelectController = 2'b01;
+        ForwardSelectController_Rs2 = 2'b01;
       end
       else if ((Rs2E == RdW_2) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelectController = 2'b10;
+        ForwardSelectController_Rs2 = 2'b10;
       end
       else if ((Rs2E == RdW_3) & RegWriteW) begin
         ForwardBE = 2'b01;
-        ForwardSelectController = 2'b11;
+        ForwardSelectController_Rs2 = 2'b11;
       end
     end
   end

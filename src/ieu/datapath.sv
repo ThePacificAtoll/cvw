@@ -83,7 +83,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   output logic [P.XLEN-1:0]  wd3,                    // Write data for port 3
 
   // VLIW Forwarding Ports
-  input [1:0] ForwardSelect,                                      // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
+  input [1:0] ForwardSelect_Rs1, ForwardSelect_Rs2,                 // This is the forward select signal from this ieu instance's controller. 0 means select forwarded results from this instance
   input [P.XLEN-1:0] ResultW_1, ResultW_2, ResultW_3,             // These are the results from other FUs' WB Stage
   input [P.XLEN-1:0] IFResultM_1, IFResultM_2, IFResultM_3,       // These are the results from other FUs' Mem Stage
   output [P.XLEN-1:0] ResultW, IFResultM_0                        // These are the results from this ieu instance.
@@ -130,32 +130,57 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
 
   // Selection logic for which forwarded result to use:
   assign IFResultM_0 = IFResultM;
-  logic [P.XLEN-1:0] ResultW_Select;
-  logic [P.XLEN-1:0] IFResultM_Select;
+  logic [P.XLEN-1:0] ResultW_Select_Rs1;
+  logic [P.XLEN-1:0] IFResultM_Select_Rs1;
+
+  logic [P.XLEN-1:0] ResultW_Select_Rs2;
+  logic [P.XLEN-1:0] IFResultM_Select_Rs2;
 
   always_comb begin
-    case (ForwardSelect)
+    // Forward Lane Selection for RS1
+    case (ForwardSelect_Rs1)
       2'b00 : begin
-        ResultW_Select = ResultW_internal;
-        IFResultM_Select = IFResultM;
+        ResultW_Select_Rs1 = ResultW_internal;
+        IFResultM_Select_Rs1 = IFResultM;
       end
       2'b01 : begin
-        ResultW_Select = ResultW_1;
-        IFResultM_Select = IFResultM_1;
+        ResultW_Select_Rs1 = ResultW_1;
+        IFResultM_Select_Rs1 = IFResultM_1;
       end
       2'b10 : begin
-        ResultW_Select = ResultW_2;
-        IFResultM_Select = IFResultM_2;
+        ResultW_Select_Rs1 = ResultW_2;
+        IFResultM_Select_Rs1 = IFResultM_2;
       end
       2'b11 : begin
-        ResultW_Select = ResultW_3;
-        IFResultM_Select = IFResultM_3;
+        ResultW_Select_Rs1 = ResultW_3;
+        IFResultM_Select_Rs1 = IFResultM_3;
       end
     endcase
+
+    // Forward Lane Selection for RS2
+    case (ForwardSelect_Rs2)
+      2'b00 : begin
+        ResultW_Select_Rs2 = ResultW_internal;
+        IFResultM_Select_Rs2 = IFResultM;
+      end
+      2'b01 : begin
+        ResultW_Select_Rs2 = ResultW_1;
+        IFResultM_Select_Rs2 = IFResultM_1;
+      end
+      2'b10 : begin
+        ResultW_Select_Rs2 = ResultW_2;
+        IFResultM_Select_Rs2 = IFResultM_2;
+      end
+      2'b11 : begin
+        ResultW_Select_Rs2 = ResultW_3;
+        IFResultM_Select_Rs2 = IFResultM_3;
+      end
+    endcase
+  
   end
   
-  mux3  #(P.XLEN)  faemux(R1E, ResultW_Select, IFResultM_Select, ForwardAE, ForwardedSrcAE);  // Depending on ForwardAE, forward/send either R1E, Selected ResultW, or Selected IFResultM
-  mux3  #(P.XLEN)  fbemux(R2E, ResultW_Select, IFResultM_Select, ForwardBE, ForwardedSrcBE);
+  mux3  #(P.XLEN)  faemux(R1E, ResultW_Select_Rs1, IFResultM_Select_Rs1, ForwardAE, ForwardedSrcAE);  // Depending on ForwardAE, forward/send either R1E, Selected ResultW, or Selected IFResultM
+  mux3  #(P.XLEN)  fbemux(R2E, ResultW_Select_Rs2, IFResultM_Select_Rs2, ForwardBE, ForwardedSrcBE);
   comparator #(P.XLEN) comp(ForwardedSrcAE, ForwardedSrcBE, BranchSignedE, FlagsE);
   mux2  #(P.XLEN)  srcamux(ForwardedSrcAE, PCE, ALUSrcAE, SrcAE);
   mux2  #(P.XLEN)  srcbmux(ForwardedSrcBE, ImmExtE, ALUSrcBE, SrcBE);
