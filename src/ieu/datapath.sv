@@ -103,7 +103,7 @@ module datapath import cvw::*;  #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IFResultM;                      // Result from either IEU or single-cycle FPU op writing an integer register
   // Writeback stage signals
   logic [P.XLEN-1:0] SCResultW;                      // Store Conditional result
-  logic [P.XLEN-1:0] ResultW_internal;                        // Result to write to register file
+  logic [P.XLEN-1:0] ResultW_internal = ResultW;     // Result to write to register file
   logic [P.XLEN-1:0] IFResultW;                      // Result from either IEU or single-cycle FPU op writing an integer register
   logic [P.XLEN-1:0] IFCvtResultW;                   // Result from IEU, signle-cycle FPU op, or 2-cycle FCVT float to int 
   logic [P.XLEN-1:0] MulDivResultW;                  // Multiply always comes from MDU.  Divide could come from MDU or FPU (when using fdivsqrt for integer division)
