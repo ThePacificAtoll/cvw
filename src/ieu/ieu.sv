@@ -99,7 +99,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
   input  logic RegWriteW_1, RegWriteW_2, RegWriteW_3,                      // These inpits are WriteEnable status of other lanes insts in W stage,
 
   // Extra RdEs for MatchDE checking across lanes
-  input  logic  [4:0]  RdE_1, RdE_2, RdE_3                // Pipelined destination registers from other lanes
+  input  logic  [4:0]  RdE_1, RdE_2, RdE_3,               // Pipelined destination registers from other lanes
   output logic MemReadE,                                  // Signal identifying whether a read of memory will happen for this lane
   output logic SCE,                                       // Signal identifying whether result source E == 3'b100
   input  logic MemReadE_1, MemReadE_2, MemReadE_3,        // Signals identifying whether a read of memory will happen for other lanes
@@ -183,7 +183,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .MemReadE(MemReadE),                                        // Output signal identifying whether a read of memory will happen for this lane
     .SCE(SCE),                                                  // Output signal identifying whether result source E == 3'b100
     .MemReadE_1(MemReadE_1), .MemReadE_2(MemReadE_2), .MemReadE_3(MemReadE_3),  // Input ignals identifying whether a read of memory will happen for other lanes
-    .SCE_1(SCE_1), SCE_2(SCE_2), SCE_3(SCE_3)                   // Input signals identifying whether result source E == 3'b100 for other lanes
+    .SCE_1(SCE_1), .SCE_2(SCE_2), .SCE_3(SCE_3)                 // Input signals identifying whether result source E == 3'b100 for other lanes
     );
 
   datapath #(P) dp(
@@ -202,7 +202,7 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     .ResultW_1(ResultW_1), .ResultW_2(ResultW_2), .ResultW_3(ResultW_3),                     // These inputs are the results from other FUs' WB Stage
     .IFResultM_1(IFResultM_1), .IFResultM_2(IFResultM_2), .IFResultM_3(IFResultM_3),         // These inputs are the results from other FUs' Mem Stage
     .ResultW(ResultW), .IFResultM_0(IFResultM)                                               // These are the Mem and WB stage results of this ieu instance
-    );      
+    );
 
 
 // TODO: adjust wallypipelinedcore to connect inter-ieu wires, also result outputs need to be brought out from datapath

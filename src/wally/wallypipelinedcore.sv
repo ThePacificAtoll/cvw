@@ -334,7 +334,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .MemReadE(MemReadE),                                        // Output signal identifying whether a read of memory will happen for this lane
      .SCE(SCE),                                                  // Output signal identifying whether result source E == 3'b100
      .MemReadE_1(MemReadE_1), .MemReadE_2(MemReadE_2), .MemReadE_3(MemReadE_3),  // Input ignals identifying whether a read of memory will happen for other lanes
-     .SCE_1(SCE_1), SCE_2(SCE_2), SCE_3(SCE_3)                   // Input signals identifying whether result source E == 3'b100 for other lanes
+     .SCE_1(SCE_1), .SCE_2(SCE_2), .SCE_3(SCE_3)                 // Input signals identifying whether result source E == 3'b100 for other lanes
      );
     
     ieu #(P)
@@ -384,7 +384,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .MemReadE(MemReadE_1),                                       // Output signal identifying whether a read of memory will happen for this lane
      .SCE(SCE_1),                                                 // Output signal identifying whether result source E == 3'b100
      .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_2), .MemReadE_3(MemReadE_3),   // Input ignals identifying whether a read of memory will happen for other lanes
-     .SCE_1(SCE), SCE_2(SCE_2), SCE_3(SCE_3)                      // Input signals identifying whether result source E == 3'b100 for other lanes
+     .SCE_1(SCE), .SCE_2(SCE_2), .SCE_3(SCE_3)                    // Input signals identifying whether result source E == 3'b100 for other lanes
      );
 
     ieu #(P)
@@ -434,7 +434,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .MemReadE(MemReadE_2),                                         // Output signal identifying whether a read of memory will happen for this lane
      .SCE(SCE_2),                                                   // Output signal identifying whether result source E == 3'b100
      .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_1), .MemReadE_3(MemReadE_3),   // Input ignals identifying whether a read of memory will happen for other lanes
-     .SCE_1(SCE), SCE_2(SCE_1), SCE_3(SCE_3)                        // Input signals identifying whether result source E == 3'b100 for other lanes
+     .SCE_1(SCE), .SCE_2(SCE_1), .SCE_3(SCE_3)                      // Input signals identifying whether result source E == 3'b100 for other lanes
      );
 
     ieu #(P)
@@ -484,7 +484,7 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .MemReadE(MemReadE_3),                                         // Output signal identifying whether a read of memory will happen for this lane
      .SCE(SCE_3),                                                   // Output signal identifying whether result source E == 3'b100
      .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_1), .MemReadE_3(MemReadE_2),   // Input ignals identifying whether a read of memory will happen for other lanes
-     .SCE_1(SCE), SCE_2(SCE_1), SCE_3(SCE_2)                        // Input signals identifying whether result source E == 3'b100 for other lanes
+     .SCE_1(SCE), .SCE_2(SCE_1), .SCE_3(SCE_2)                      // Input signals identifying whether result source E == 3'b100 for other lanes
      );
 
 
