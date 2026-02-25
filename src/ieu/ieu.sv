@@ -205,6 +205,4 @@ module ieu import cvw::*;  #(parameter cvw_t P) (
     );
 
 
-// TODO: adjust wallypipelinedcore to connect inter-ieu wires, also result outputs need to be brought out from datapath
-
 endmodule
