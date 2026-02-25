@@ -282,6 +282,10 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
   logic [P.XLEN-1:0] IFResultM, IFResultM_1, IFResultM_2, IFResultM_3;         // These inputs are the results from other FUs' Mem Stage
   logic RegWriteMOut, RegWriteMOut_1, RegWriteMOut_2, RegWriteMOut_3;
   logic RegWriteWOut, RegWriteWOut_1, RegWriteWOut_2, RegWriteWOut_3;
+
+  logic MemReadE, MemReadE_1, MemReadE_2, MemReadE_3;
+  logic SCE, SCE_1, SCE_2, SCE_3;
+
   //ieu_1
 
 
@@ -324,7 +328,13 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .RegWriteMOut(RegWriteMOut), .RegWriteWOut(RegWriteWOut),                              // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
      .ResultW(ResultW), .IFResultM(IFResultM),                                              // Results from this ieu instance
      .RegWriteM_1(RegWriteMOut_1), .RegWriteM_2(RegWriteMOut_2), .RegWriteM_3(RegWriteMOut_3),       // WriteEnable status of other lanes insts in M stage
-     .RegWriteW_1(RegWriteWOut_1), .RegWriteW_2(RegWriteWOut_2), .RegWriteW_3(RegWriteWOut_3)        // WriteEnable status of other lanes insts in W stage
+     .RegWriteW_1(RegWriteWOut_1), .RegWriteW_2(RegWriteWOut_2), .RegWriteW_3(RegWriteWOut_3),       // WriteEnable status of other lanes insts in W stage
+     .RdE_1(RdE_1), .RdE_2(RdE_2), .RdE_3(RdE_3),                                           // These are inputs to the controller that are used for MatchDE checking across lanes
+     
+     .MemReadE(MemReadE),                                        // Output signal identifying whether a read of memory will happen for this lane
+     .SCE(SCE),                                                  // Output signal identifying whether result source E == 3'b100
+     .MemReadE_1(MemReadE_1), .MemReadE_2(MemReadE_2), .MemReadE_3(MemReadE_3),  // Input ignals identifying whether a read of memory will happen for other lanes
+     .SCE_1(SCE_1), SCE_2(SCE_2), SCE_3(SCE_3)                   // Input signals identifying whether result source E == 3'b100 for other lanes
      );
     
     ieu #(P)
@@ -368,7 +378,13 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .RegWriteMOut(RegWriteMOut_1), .RegWriteWOut(RegWriteWOut_1),                          // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
      .ResultW(ResultW_1), .IFResultM(IFResultM_1),                                          // Results from this ieu instance
      .RegWriteM_1(RegWriteMOut), .RegWriteM_2(RegWriteMOut_2), .RegWriteM_3(RegWriteMOut_3),       // WriteEnable status of other lanes insts in M stage
-     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_2), .RegWriteW_3(RegWriteWOut_3)        // WriteEnable status of other lanes insts in W stage
+     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_2), .RegWriteW_3(RegWriteWOut_3),       // WriteEnable status of other lanes insts in W stage
+     .RdE_1(RdE), .RdE_2(RdE_2), .RdE_3(RdE_3),                                             // These are inputs to the controller that are used for MatchDE checking across lanes
+     
+     .MemReadE(MemReadE_1),                                       // Output signal identifying whether a read of memory will happen for this lane
+     .SCE(SCE_1),                                                 // Output signal identifying whether result source E == 3'b100
+     .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_2), .MemReadE_3(MemReadE_3),   // Input ignals identifying whether a read of memory will happen for other lanes
+     .SCE_1(SCE), SCE_2(SCE_2), SCE_3(SCE_3)                      // Input signals identifying whether result source E == 3'b100 for other lanes
      );
 
     ieu #(P)
@@ -412,7 +428,13 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .RegWriteMOut(RegWriteMOut_2), .RegWriteWOut(RegWriteWOut_2),                          // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
      .ResultW(ResultW_2), .IFResultM(IFResultM_2),                                          // Results from this ieu instance
      .RegWriteM_1(RegWriteMOut), .RegWriteM_2(RegWriteMOut_1), .RegWriteM_3(RegWriteMOut_3),       // WriteEnable status of other lanes insts in M stage
-     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_1), .RegWriteW_3(RegWriteWOut_3)        // WriteEnable status of other lanes insts in W stage
+     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_1), .RegWriteW_3(RegWriteWOut_3),       // WriteEnable status of other lanes insts in W stage
+     .RdE_1(RdE), .RdE_2(RdE_1), .RdE_3(RdE_3),                                             // These are inputs to the controller that are used for MatchDE checking across lanes
+     
+     .MemReadE(MemReadE_2),                                         // Output signal identifying whether a read of memory will happen for this lane
+     .SCE(SCE_2),                                                   // Output signal identifying whether result source E == 3'b100
+     .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_1), .MemReadE_3(MemReadE_3),   // Input ignals identifying whether a read of memory will happen for other lanes
+     .SCE_1(SCE), SCE_2(SCE_1), SCE_3(SCE_3)                        // Input signals identifying whether result source E == 3'b100 for other lanes
      );
 
     ieu #(P)
@@ -456,8 +478,14 @@ module wallypipelinedcore import cvw::*; #(parameter cvw_t P) (
      .RegWriteMOut(RegWriteMOut_3), .RegWriteWOut(RegWriteWOut_3),                          // These outputs are WB and Mem stage write enable signals for this ieu instance, to be sent out to other FUs
      .ResultW(ResultW_3), .IFResultM(IFResultM_3),                                          // Results from this ieu instance
      .RegWriteM_1(RegWriteMOut), .RegWriteM_2(RegWriteMOut_1), .RegWriteM_3(RegWriteMOut_2),       // WriteEnable status of other lanes insts in M stage
-     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_1), .RegWriteW_3(RegWriteWOut_2)        // WriteEnable status of other lanes insts in W stage
-      );
+     .RegWriteW_1(RegWriteWOut), .RegWriteW_2(RegWriteWOut_1), .RegWriteW_3(RegWriteWOut_2),       // WriteEnable status of other lanes insts in W stage
+     .RdE_1(RdE), .RdE_2(RdE_1), .RdE_3(RdE_2),                                             // These are inputs to the controller that are used for MatchDE checking across lanes
+
+     .MemReadE(MemReadE_3),                                         // Output signal identifying whether a read of memory will happen for this lane
+     .SCE(SCE_3),                                                   // Output signal identifying whether result source E == 3'b100
+     .MemReadE_1(MemReadE), .MemReadE_2(MemReadE_1), .MemReadE_3(MemReadE_2),   // Input ignals identifying whether a read of memory will happen for other lanes
+     .SCE_1(SCE), SCE_2(SCE_1), SCE_3(SCE_2)                        // Input signals identifying whether result source E == 3'b100 for other lanes
+     );
 
 
   lsu #(P) 
